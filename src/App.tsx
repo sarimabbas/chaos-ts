@@ -15,7 +15,7 @@ const App = () => {
   }, []);
 
   const getFileTree = async () => {
-    const result = ipcRenderer.invoke(
+    const result = await ipcRenderer.invoke(
       "getFileTree",
       "/Users/sarimabbas/Downloads"
     );

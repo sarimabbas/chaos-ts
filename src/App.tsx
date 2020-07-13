@@ -1,20 +1,20 @@
-import React from 'react'
-import { render } from 'react-dom'
-import { GlobalStyle } from './styles/GlobalStyle'
+import React from "react";
+import { render } from "react-dom";
 
-import Greetings from './components/Greetings'
+import "./styles/main.css";
 
-const mainElement = document.createElement('div')
-mainElement.setAttribute('id', 'root')
-document.body.appendChild(mainElement)
+import Greetings from "./components/Greetings";
+
+const mainElement = document.createElement("div");
+mainElement.setAttribute("id", "root");
+document.body.appendChild(mainElement);
 
 const App = () => {
   return (
     <>
-      <GlobalStyle />
-      <Greetings />
+      <h1>Helllo, how are you</h1>
     </>
-  )
-}
+  );
+};
 
-render(<App />, mainElement)
+render(<App />, mainElement);

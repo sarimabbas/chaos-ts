@@ -17878,6 +17878,15 @@ video {
   transition-delay: 1000ms;
 }
 
+html {
+  background-color: white;
+}
+
+html,
+body {
+  height: 100%;
+}
+
 @media (min-width: 640px) {
   .sm\:space-y-0 > :not(template) ~ :not(template) {
     --space-y-reverse: 0;

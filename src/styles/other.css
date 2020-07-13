@@ -1,0 +1,30 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  background-color: white;
+}
+
+.grid-container {
+  display: grid;
+  height: 100%;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: "sidebar content";
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background-color: red;
+  resize: horizontal;
+  overflow: hidden;
+  min-width: 250px;
+  max-width: 500px;
+}
+
+.content {
+  grid-area: content;
+}

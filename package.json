@@ -63,6 +63,7 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
+    "antd": "^4.4.2",
     "directory-tree": "^2.2.4",
     "rc-tree": "^3.6.0",
     "react": "^16.13.1",

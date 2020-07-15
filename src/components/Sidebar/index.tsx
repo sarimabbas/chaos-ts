@@ -94,8 +94,8 @@ const Sidebar = () => {
 
     // * these are the user assigned keys for each node
     // * you gotta make sure these are unique for the drop to work
-    const dropKey = info.node.key; // the thing being dropped on
-    const dragKey = info.dragNode.key; // the thing being dragged
+    const dropKey = info.node.key; // the thing being dropped on (target)
+    const dragKey = info.dragNode.key; // the thing being dragged (source)
 
     // * three options for dropPosition:
     // * -1 => it's before the highlighted node
@@ -109,9 +109,10 @@ const Sidebar = () => {
     // this is a function that traverses the tree starting at "data" node as root
     // it does this until the key === data.key, at which point it applies a callback
     // to that data node
-    const loop = (data: any, key: any, callback: any) => {
+    const loop = async (data: any, key: any, callback: any) => {
       for (let i = 0; i < data.length; i++) {
         if (data[i].key === key) {
+          // const pathSoFar=  await ipcRenderer.invoke("pathJoin", pathBuilder, data[i].title)
           return callback(data[i], i, data);
         }
         if (data[i].children) {
@@ -122,6 +123,8 @@ const Sidebar = () => {
 
     // * Make a copy of all the data
     const data = [...treeData];
+
+    // TODO: compute path to dragNode before any of the splicing stuff happens below
 
     // * Remove the drag node from the children array of its parent
     // Find dragObject i.e. the thing being dragged
@@ -163,7 +166,7 @@ const Sidebar = () => {
       let i: number = 0;
       // loop until you find the target node
       // find its index in its parent's children
-      // also get the whole array of chidlren
+      // also get the whole array of children
       loop(data, dropKey, (item: any, index: any, arr: any) => {
         ar = arr;
         i = index;
@@ -177,7 +180,16 @@ const Sidebar = () => {
       }
     }
 
+    // TODO: compute path to dragNode after all the splicing stuff has happened
+    // TODO: mv oldPath newPath
+    // TODO: you can probably modify loop() with a pathBuilder argument, that is injected into the callback
+
     setTreeData(data);
+
+    const isDepthDifference =
+      info.node.pos.split("-").length !== info.dragNode.pos.split("-").length;
+
+    console.log("isDepthDifference", isDepthDifference);
 
     // getPathFromPosition(info.node.pos);
 

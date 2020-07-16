@@ -1,43 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { ipcRenderer } from "electron";
-import { Tree } from "antd";
-const { DirectoryTree } = Tree;
-
-class Position {
-  pos: number[];
-  constructor(pos: string) {
-    this.pos = pos.split("-").map((p) => parseInt(p));
-    this.pos.shift();
-  }
-
-  popRight() {
-    const res = this.pos.pop();
-    if (res === undefined) {
-      return -1;
-    }
-    return res;
-  }
-
-  popLeft() {
-    const res = this.pos.shift();
-    if (res === undefined) {
-      return -1;
-    }
-    return res;
-  }
-
-  toString() {
-    return this.pos.join("-");
-  }
-}
+import { ipcRenderer, ipcMain } from "electron";
+import { Tree, Menu, Dropdown, Input } from "antd";
+import { EditFilled } from "@ant-design/icons";
+const { SubMenu } = Menu;
+const { Search } = Input;
+const { DirectoryTree, TreeNode } = Tree;
+import PATH from "path";
 
 const Sidebar = () => {
   const [treeData, setTreeData] = useState([]);
   const [expandedKeys, setExpandedKeys] = useState([]);
+  const [rootPath, setRootPath] = useState("");
+  const [rightClickInfo, setRightClickInfo]: any = useState(null);
+  const [rightClickMenuVisible, setRightClickMenuVisible] = useState(false);
+  const [showRenameInput, setShowRenameInput] = useState(false);
 
-  useEffect(() => {
-    getExplorerTree();
-  }, []);
+  useEffect(() => {}, []);
 
   const convertToExplorerTree = (root: any) => {
     delete root.path;
@@ -66,14 +44,27 @@ const Sidebar = () => {
     }
   };
 
-  const getExplorerTree = async () => {
-    const result: any = await ipcRenderer.invoke(
-      "getFileTree",
-      "/Users/sarimabbas/Downloads"
-    );
-    convertToExplorerTree(result);
-    assignKeys(result);
+  const chooseRootFolder = async () => {
+    // pick folder from file picker
+    const { canceled, filePaths } = await ipcRenderer.invoke("chooseFolder");
+    if (canceled) {
+      return;
+    }
+    const folder = filePaths[0];
+    const root = PATH.dirname(folder); // get the path up to but not including that folder
+    setRootPath(root); // store it as the root path
 
+    getExplorerTree(folder);
+  };
+
+  const getExplorerTree = async (pathToFolder: string) => {
+    // get the entire file tree starting from that folder
+    const result: any = await ipcRenderer.invoke("getFileTree", pathToFolder);
+    // remove files, keep directories only
+    convertToExplorerTree(result);
+    // assign unique keys to all the nodes
+    assignKeys(result);
+    // set the tree data
     const treeData: any = [];
     treeData.push(result);
     setTreeData(treeData);
@@ -89,7 +80,7 @@ const Sidebar = () => {
     // });
   };
 
-  const onDrop = (info: any) => {
+  const onDrop = async (info: any) => {
     console.log("on drop", info);
 
     // * these are the user assigned keys for each node
@@ -109,14 +100,19 @@ const Sidebar = () => {
     // this is a function that traverses the tree starting at "data" node as root
     // it does this until the key === data.key, at which point it applies a callback
     // to that data node
-    const loop = async (data: any, key: any, callback: any) => {
+    const loop = async (
+      data: any,
+      key: any,
+      callback: any,
+      pathBuilder: string = ""
+    ) => {
       for (let i = 0; i < data.length; i++) {
+        const pathSoFar = PATH.join(pathBuilder, data[i].title);
         if (data[i].key === key) {
-          // const pathSoFar=  await ipcRenderer.invoke("pathJoin", pathBuilder, data[i].title)
-          return callback(data[i], i, data);
+          return callback(data[i], i, data, pathSoFar);
         }
         if (data[i].children) {
-          loop(data[i].children, key, callback);
+          loop(data[i].children, key, callback, pathSoFar);
         }
       }
     };
@@ -124,16 +120,24 @@ const Sidebar = () => {
     // * Make a copy of all the data
     const data = [...treeData];
 
+    const join = PATH.join("a", "b");
+    console.log(join);
+
     // TODO: compute path to dragNode before any of the splicing stuff happens below
 
     // * Remove the drag node from the children array of its parent
     // Find dragObject i.e. the thing being dragged
     let dragObj: any;
-    loop(data, dragKey, (item: any, index: any, arr: any) => {
+    let dragPath: any;
+    loop(data, dragKey, (item: any, index: any, arr: any, path: string) => {
       // remove the drag node from the children[] of its parent
       arr.splice(index, 1);
       dragObj = item;
+      dragPath = path;
     });
+    dragPath = PATH.join(rootPath, dragPath);
+
+    console.log("Drag path", dragPath);
 
     // * the dragged node could end up in three places
     if (!info.dropToGap) {
@@ -186,67 +190,126 @@ const Sidebar = () => {
 
     setTreeData(data);
 
-    const isDepthDifference =
-      info.node.pos.split("-").length !== info.dragNode.pos.split("-").length;
+    let newDragPath: any;
+    loop(data, dragKey, (item: any, index: number, arr: any, path: string) => {
+      newDragPath = path;
+    });
+    newDragPath = PATH.join(rootPath, newDragPath);
 
-    console.log("isDepthDifference", isDepthDifference);
+    console.log("new drag path", newDragPath);
 
-    // getPathFromPosition(info.node.pos);
-
-    // the dragNode is the node being dragged
-    // the position of that node is the original position
-
-    // dragNodesKeys: the two user assigned keys in an array
-    // the first key is the node being dragged
-    // the second key is the node that is dropped onto
-
-    // dropPostition is not useful; it is just the relative position
-    // within that folder i.e the first position, second, third etc
-
-    // node is the target node, which was dropped onto
-
-    // to move stuff in the file system
-    // 1. if dragNode.pos.split("-").length == node.pos.split("-").length
-    //    return
-    // 2.
-  };
-
-  const getPathFromPosition = async (pos: string) => {
-    // build up the path to this position
-    const p: Position = new Position(pos);
-    let path = "";
-    const pop = p.popLeft();
-    let currNode: any = treeData[pop];
-    path = await ipcRenderer.invoke("pathJoin", path, currNode.title);
-    while (p.pos.length > 0) {
-      const pop: number = p.popLeft();
-      currNode = currNode.children[pop];
-      path = await ipcRenderer.invoke("pathJoin", path, currNode.title);
-    }
-
-    // console.log(path);
-    // console.log(currNode);
-
-    console.log(currNode);
-
-    console.log(path);
+    // do a move operation
+    await ipcRenderer.invoke("renamePath", dragPath, newDragPath);
   };
 
   const onSelect = (selectedKeys, other) => {
     console.log("on click", selectedKeys, other);
   };
 
+  const handleVisibleChange = (visible: boolean) => {
+    console.log("visible", visible);
+    if (!visible) {
+      setRightClickInfo(null);
+      console.log("cleared");
+    }
+    setRightClickMenuVisible(visible);
+  };
+
+  const onRightClick = ({ event, node }: any) => {
+    console.log(event, node);
+    setRightClickInfo({
+      pageX: event.pageX,
+      pageY: event.pageY,
+      node: node,
+    });
+  };
+
+  const onRenameSubmit = async (value: string, event: any) => {
+    console.log(value);
+
+    const data = [...treeData];
+
+    const loop = (
+      data: any,
+      key: any,
+      callback: any,
+      pathBuilder: string = ""
+    ) => {
+      for (let i = 0; i < data.length; i++) {
+        const pathSoFar = PATH.join(pathBuilder, data[i].title);
+        if (data[i].key === key) {
+          return callback(data[i], i, data, pathSoFar);
+        }
+        if (data[i].children) {
+          loop(data[i].children, key, callback, pathSoFar);
+        }
+      }
+    };
+
+    let oldPath: any;
+    loop(data, rightClickInfo.node.key, (curr, index, data, path: string) => {
+      oldPath = path;
+      curr.title = value;
+    });
+    oldPath = PATH.join(rootPath, oldPath);
+
+    console.log("oldPath", oldPath);
+
+    const newPath = PATH.join(PATH.dirname(oldPath), value);
+    console.log("newPath", newPath);
+
+    await ipcRenderer.invoke("renamePath", oldPath, newPath);
+
+    setTreeData(data);
+
+    setRightClickInfo(null);
+    console.log("cleared");
+    setRightClickMenuVisible(false);
+  };
+
+  const menu = (
+    <Menu>
+      {rightClickInfo ? (
+        <Menu.Item key="1" onClick={() => setShowRenameInput(true)}>
+          {showRenameInput ? (
+            <Search
+              placeholder={rightClickInfo.node.title}
+              enterButton={<EditFilled />}
+              onSearch={onRenameSubmit}
+            />
+          ) : (
+            "Rename"
+          )}
+        </Menu.Item>
+      ) : null}
+    </Menu>
+  );
+
   return (
     <div>
       <h1>Hello, I'm a tree view</h1>
-      <Tree
-        treeData={treeData}
-        onDragEnter={onDragEnter}
-        onDrop={onDrop}
-        onSelect={onSelect}
-        autoExpandParent={false}
-        draggable
-      />
+      <a href="#" onClick={chooseRootFolder}>
+        Choose folder
+      </a>
+      <Dropdown
+        overlay={menu}
+        visible={rightClickMenuVisible}
+        trigger={["contextMenu"]}
+        onVisibleChange={handleVisibleChange}
+      >
+        <div>
+          <Tree
+            onDragEnter={onDragEnter}
+            height={500}
+            onRightClick={onRightClick}
+            treeData={treeData}
+            onDrop={onDrop}
+            onSelect={onSelect}
+            autoExpandParent={false}
+            draggable
+          />
+        </div>
+      </Dropdown>
     </div>
   );
 };

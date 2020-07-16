@@ -1,5 +1,6 @@
-import { ipcMain } from "electron";
+import { ipcMain, dialog } from "electron";
 import PATH from "path";
+import FS from "fs";
 import dirTree from "directory-tree";
 
 ipcMain.handle("getFileTree", async (event, startPath) => {
@@ -7,6 +8,14 @@ ipcMain.handle("getFileTree", async (event, startPath) => {
   return tree;
 });
 
-ipcMain.handle("pathJoin", async (event, ...paths) => {
-  return PATH.join(...paths);
+ipcMain.handle("chooseFolder", async (event) => {
+  return dialog.showOpenDialog({
+    properties: ["openDirectory", "createDirectory"],
+  });
+});
+
+ipcMain.handle("renamePath", async (event, fromPath, toPath) => {
+  return FS.rename(fromPath, toPath, (err) => {
+    console.log(err);
+  });
 });

@@ -1,7 +1,7 @@
 {
-  "name": "electron-react-typescript",
+  "name": "chaos",
   "version": "1.0.0",
-  "description": "An Electron boilerplate including TypeScript, React, Jest and ESLint.",
+  "description": "A bookmarking app for the ages.",
   "main": "./dist/main.js",
   "scripts": {
     "dev": "npm run watch:css && npm-run-all -p dev:react electron:serve",
@@ -19,7 +19,7 @@
     "watch:css": "postcss src/styles/tailwind.css -o src/styles/main.css"
   },
   "keywords": [],
-  "author": "Diego Fernandes <diego.schell.f@gmail.com>",
+  "author": "Sarim Abbas <sarim.stays@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.10.4",
@@ -76,12 +76,16 @@
     "styled-components": "^5.1.1"
   },
   "build": {
-    "appId": "your.id",
+    "appId": "com.sarimabbas.chaos",
+    "productName": "Chaos",
+    "copyright": "Copyright © 2020 Sarim Abbas",
     "mac": {
-      "category": "public.app-category.video"
+      "category": "public.app-category.productivity",
+      "icon": "icon.icns"
     },
     "directories": {
-      "output": "packages"
+      "output": "packages",
+      "buildResources": "resources"
     },
     "files": [
       "package.json",

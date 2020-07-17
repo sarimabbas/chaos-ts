@@ -104,7 +104,7 @@ const template = [
       {
         label: "Learn More",
         click: async () => {
-          await shell.openExternal("https://electronjs.org");
+          await shell.openExternal("https://sarimabbas.com");
         },
       },
     ],

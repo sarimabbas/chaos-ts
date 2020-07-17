@@ -18,6 +18,8 @@ html {
 
 .sidebar {
   grid-area: sidebar;
+  height: 100%;
+  overflow-y: scroll;
   background-color: rgb(59, 59, 59);
   resize: horizontal;
   overflow: hidden;
@@ -27,6 +29,8 @@ html {
 
 .content {
   grid-area: content;
+  height: 100%;
+  overflow-y: scroll;
 }
 
 .content-grid {

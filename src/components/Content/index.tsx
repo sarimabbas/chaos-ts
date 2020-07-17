@@ -5,22 +5,26 @@ import Card from "../Card";
 
 export default () => {
   const [content, setContent]: any = useState([]);
+  const [loading, setLoading]: any = useState(false);
   const { state: contextState, setState: setContextState } = useContext(
     GeneralContext
   );
 
   useEffect(() => {
-    console.log("context changed");
-    getContent(contextState.currentlySelectedFolderPath);
+    if (contextState.currentlySelectedFolderPath !== "") {
+      getContent(contextState.currentlySelectedFolderPath);
+    }
   }, [contextState.currentlySelectedFolderPath]);
 
   const getContent = async (path: string) => {
+    setLoading(true);
     let tree = await ipcRenderer.invoke("getFileTree", path);
     const relevantContent: any[] = [];
     convertToContentArray(tree, relevantContent);
     const previews = await generatePreviews(relevantContent);
     console.log(previews);
     setContent(previews);
+    setLoading(false);
   };
 
   const convertToContentArray = (root: any, arr: any[]) => {
@@ -54,17 +58,19 @@ export default () => {
   };
 
   return (
-    <>
-      <div className="p-4">
-        <h1 className="flex">
-          {contextState.currentlySelectedFolderPath
-            ? "Folder:"
-            : "No folder selected"}
-          <pre className="ml-2">
-            {(contextState.currentlySelectedExplorerNode as any).title}
-          </pre>
-        </h1>
-        <div className="h-4"></div>
+    <div className="p-4">
+      <h1 className="flex">
+        {contextState.currentlySelectedFolderPath
+          ? "Folder:"
+          : "No folder selected"}
+        <pre className="ml-2">
+          {(contextState.currentlySelectedExplorerNode as any).title}
+        </pre>
+      </h1>
+      <div className="h-4"></div>
+      {loading ? (
+        <p>Loading folder contents...</p>
+      ) : (
         <div className="content-grid">
           {content.map((c: any) => (
             <Card
@@ -75,8 +81,11 @@ export default () => {
               favicon={c.preview?.favicons?.[0]}
             />
           ))}
+          {contextState.currentlySelectedFolderPath && content.length < 1 ? (
+            <p>Folder is empty</p>
+          ) : null}
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };

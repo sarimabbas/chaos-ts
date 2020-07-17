@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ipcRenderer } from "electron";
-import { Modal, Input } from "antd";
+import { Modal, Menu, Dropdown } from "antd";
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
@@ -13,6 +13,7 @@ export default () => {
   const { state: contextState, setState: setContextState } = useContext(
     GeneralContext
   );
+  const [rightClickedCard, setRightClickedCard] = useState(null);
 
   useEffect(() => {
     if (contextState.currentlySelectedFolderPath !== "") {
@@ -63,7 +64,7 @@ export default () => {
     );
   };
 
-  const onAddLink = async (event) => {
+  const onAddLink = async (event: any) => {
     event.preventDefault();
     console.log(inputLink);
     const template = `
@@ -93,6 +94,38 @@ export default () => {
     setContent([tempContentEntity, ...content]);
     // getContent(contextState.currentlySelectedFolderPath);
   };
+
+  const onRightClickCard = (card: any) => {
+    setRightClickedCard(card);
+    console.log(card);
+  };
+
+  const onOpenInBrowser = async () => {
+    if (rightClickedCard) {
+      await ipcRenderer.invoke("openExternal", (rightClickedCard as any)?.url);
+    }
+  };
+
+  const onTrash = async () => {
+    if (rightClickedCard) {
+      const pathToRemove = (rightClickedCard as any)?.path;
+      // remove from content array
+      const newContent = content.filter((c) => c.path !== pathToRemove);
+      await ipcRenderer.invoke("moveToTrash", pathToRemove);
+      setContent(newContent);
+    }
+  };
+
+  const menu = (
+    <Menu>
+      <Menu.Item key="1" onClick={onOpenInBrowser}>
+        Open in browser
+      </Menu.Item>
+      <Menu.Item key="2" onClick={onTrash}>
+        Move to Trash
+      </Menu.Item>
+    </Menu>
+  );
 
   return (
     <div className="p-4">
@@ -153,14 +186,18 @@ export default () => {
       ) : (
         <div className="content-grid">
           {content.map((c: any) => (
-            <Card
-              key={c.path}
-              title={c.preview?.title || c.title}
-              description={c.preview?.description}
-              image={c.preview?.images?.[0]}
-              favicon={c.preview?.favicons?.[0]}
-              url={c.preview?.url || c.url}
-            />
+            <Dropdown overlay={menu} trigger={["contextMenu"]} key={c.path}>
+              <div className="nuke" onContextMenu={() => onRightClickCard(c)}>
+                <Card
+                  key={c.path}
+                  title={c.preview?.title || c.title}
+                  description={c.preview?.description}
+                  image={c.preview?.images?.[0]}
+                  favicon={c.preview?.favicons?.[0]}
+                  url={c.preview?.url || c.url}
+                />
+              </div>
+            </Dropdown>
           ))}
           {contextState.currentlySelectedFolderPath && content.length < 1 ? (
             <p>Folder is empty</p>

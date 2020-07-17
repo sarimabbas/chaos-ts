@@ -1,20 +1,30 @@
 import React from "react";
 
-export default ({ title, description, url, image, favicon }: any) => {
+const Card = ({ title, description, url, image, favicon }: any) => {
   return (
-    <div className="relative flex flex-col px-4 py-4 bg-gray-300 rounded-md hover:bg-gray-400">
+    <div className="relative flex flex-col h-full pb-3 bg-gray-200 rounded-md hover:bg-gray-300">
+      {/* link */}
       <a href={url} className="card-link" target="__blank" />
+      {/* image */}
       {image ? (
         <img
-          src={image || favicon}
+          src={
+            image ||
+            favicon ||
+            "https://sarimabbas.github.io/chaos/assets/icon.png"
+          }
           alt={title}
-          className="object-scale-down h-24 my-5"
+          className="object-cover w-full h-40 mb-4 border-gray-500 border-opacity-25 border-solid rounded-t-md"
+          style={{
+            borderBottomWidth: "1px",
+          }}
           loading="lazy"
         />
       ) : (
-        <div className="object-fill h-24 my-5" />
+        <div className="object-cover h-40 mb-4" />
       )}
-      <div>
+      {/* information */}
+      <div className="px-4">
         {/* favicon and title group */}
         <div className="flex items-center">
           {/* <img
@@ -34,3 +44,4 @@ export default ({ title, description, url, image, favicon }: any) => {
     </div>
   );
 };
+export default Card;

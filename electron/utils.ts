@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from "electron";
+import { ipcMain, dialog, shell } from "electron";
 import PATH from "path";
 import { promises as FS } from "fs";
 import dirTree from "directory-tree";
@@ -29,4 +29,12 @@ ipcMain.handle("readFile", async (event, path) => {
 
 ipcMain.handle("writeFile", async (event, path, contents) => {
   return FS.writeFile(path, contents);
+});
+
+ipcMain.handle("openExternal", async (event, url) => {
+  return shell.openExternal(url);
+});
+
+ipcMain.handle("moveToTrash", async (event, path) => {
+  return shell.moveItemToTrash(path);
 });

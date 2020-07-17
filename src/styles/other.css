@@ -58,3 +58,7 @@ pre {
   position: absolute;
   content: "";
 }
+
+.nuke {
+  all: unset;
+}

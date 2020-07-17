@@ -57,11 +57,14 @@ export default () => {
     <>
       <div className="p-4">
         <h1 className="flex">
-          Folder:
+          {contextState.currentlySelectedFolderPath
+            ? "Folder:"
+            : "No folder selected"}
           <pre className="ml-2">
             {(contextState.currentlySelectedExplorerNode as any).title}
           </pre>
         </h1>
+        <div className="h-4"></div>
         <div className="content-grid">
           {content.map((c: any) => (
             <Card

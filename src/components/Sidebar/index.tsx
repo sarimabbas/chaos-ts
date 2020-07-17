@@ -325,6 +325,7 @@ const Sidebar = () => {
       <a href="#" onClick={chooseRootFolder}>
         Choose folder
       </a>
+      <div className="h-4"></div>
       <Dropdown
         overlay={menu}
         visible={rightClickMenuVisible}

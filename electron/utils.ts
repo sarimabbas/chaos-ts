@@ -1,7 +1,8 @@
 import { ipcMain, dialog } from "electron";
 import PATH from "path";
-import FS from "fs";
+import { promises as FS } from "fs";
 import dirTree from "directory-tree";
+import { getLinkPreview } from "link-preview-js";
 
 ipcMain.handle("getFileTree", async (event, startPath) => {
   const tree = dirTree(startPath);
@@ -15,7 +16,13 @@ ipcMain.handle("chooseFolder", async (event) => {
 });
 
 ipcMain.handle("renamePath", async (event, fromPath, toPath) => {
-  return FS.rename(fromPath, toPath, (err) => {
-    console.log(err);
-  });
+  return FS.rename(fromPath, toPath);
+});
+
+ipcMain.handle("getLinkPreview", async (event, url) => {
+  return getLinkPreview(url);
+});
+
+ipcMain.handle("readFile", async (event, path) => {
+  return FS.readFile(path, "utf-8");
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { ipcRenderer, ipcMain } from "electron";
 import { Tree, Menu, Dropdown, Input } from "antd";
 import { EditFilled } from "@ant-design/icons";
@@ -6,14 +6,36 @@ const { SubMenu } = Menu;
 const { Search } = Input;
 const { DirectoryTree, TreeNode } = Tree;
 import PATH from "path";
+import { GeneralContext } from "../../contexts/GeneralContext";
 
 const Sidebar = () => {
+  const loopMe = async (
+    data: any,
+    key: any,
+    callback: any,
+    pathBuilder: string = ""
+  ) => {
+    for (let i = 0; i < data.length; i++) {
+      const pathSoFar = PATH.join(pathBuilder, data[i].title);
+      if (data[i].key === key) {
+        return callback(data[i], i, data, pathSoFar);
+      }
+      if (data[i].children) {
+        loopMe(data[i].children, key, callback, pathSoFar);
+      }
+    }
+  };
+
   const [treeData, setTreeData] = useState([]);
   const [expandedKeys, setExpandedKeys] = useState([]);
   const [rootPath, setRootPath] = useState("");
   const [rightClickInfo, setRightClickInfo]: any = useState(null);
   const [rightClickMenuVisible, setRightClickMenuVisible] = useState(false);
   const [showRenameInput, setShowRenameInput] = useState(false);
+
+  const { state: contextState, setState: setContextState } = useContext(
+    GeneralContext
+  );
 
   useEffect(() => {}, []);
 
@@ -203,13 +225,24 @@ const Sidebar = () => {
   };
 
   const onSelect = (selectedKeys, other) => {
-    console.log("on click", selectedKeys, other);
+    let selectedNodePath: any;
+    loopMe(treeData, other.node.key, (node, index, all, path) => {
+      selectedNodePath = path;
+    });
+    selectedNodePath = PATH.join(rootPath, selectedNodePath);
+    console.log(selectedNodePath);
+    setContextState({
+      ...contextState,
+      currentlySelectedFolderPath: selectedNodePath,
+      currentlySelectedExplorerNode: other.node,
+    });
   };
 
   const handleVisibleChange = (visible: boolean) => {
     console.log("visible", visible);
     if (!visible) {
       setRightClickInfo(null);
+      setShowRenameInput(false);
       console.log("cleared");
     }
     setRightClickMenuVisible(visible);
@@ -217,6 +250,8 @@ const Sidebar = () => {
 
   const onRightClick = ({ event, node }: any) => {
     console.log(event, node);
+    setRightClickInfo(null);
+    setShowRenameInput(false);
     setRightClickInfo({
       pageX: event.pageX,
       pageY: event.pageY,
@@ -286,8 +321,7 @@ const Sidebar = () => {
   );
 
   return (
-    <div>
-      <h1>Hello, I'm a tree view</h1>
+    <div className="p-4">
       <a href="#" onClick={chooseRootFolder}>
         Choose folder
       </a>

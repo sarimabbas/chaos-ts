@@ -18,7 +18,7 @@ html {
 
 .sidebar {
   grid-area: sidebar;
-  background-color: red;
+  background-color: rgb(59, 59, 59);
   resize: horizontal;
   overflow: hidden;
   min-width: 250px;
@@ -27,4 +27,20 @@ html {
 
 .content {
   grid-area: content;
+}
+
+.content-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: unset;
 }

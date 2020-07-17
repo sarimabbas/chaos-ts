@@ -1,5 +1,6 @@
 import React from "react";
 import { render } from "react-dom";
+import { Helmet } from "react-helmet";
 
 // css
 import "./styles/main.css";
@@ -20,6 +21,9 @@ document.body.appendChild(mainElement);
 const App = () => {
   return (
     <>
+      <Helmet>
+        <title>Chaos</title>
+      </Helmet>
       <GeneralContextProvider>
         <div className="grid-container">
           <div className="sidebar">

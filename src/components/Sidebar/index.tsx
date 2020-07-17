@@ -230,11 +230,9 @@ const Sidebar = () => {
   };
 
   const handleVisibleChange = (visible: boolean) => {
-    console.log("visible", visible);
     if (!visible) {
       setRightClickInfo(null);
       setShowRenameInput(false);
-      console.log("cleared");
     }
     setRightClickMenuVisible(visible);
   };

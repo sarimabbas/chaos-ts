@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ipcRenderer } from "electron";
-import { Modal, Menu, Dropdown } from "antd";
+import { Modal, Menu, Dropdown, Input } from "antd";
+import { EditFilled } from "@ant-design/icons";
+const { Search } = Input;
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
@@ -14,7 +16,11 @@ export default () => {
   const { state: contextState, setState: setContextState } = useContext(
     GeneralContext
   );
+
+  // dropdown state
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [rightClickedCard, setRightClickedCard] = useState(null);
+  const [showEditTitleInput, setShowEditTitleInput] = useState(false);
 
   useEffect(() => {
     if (contextState.currentlySelectedFolderPath !== "") {
@@ -54,19 +60,34 @@ export default () => {
   };
 
   const generatePreviews = async (arr: any[]) => {
+    // in parallel
     return Promise.all(
+      // for all file paths
       arr.map(async (a) => {
+        // read the file
         const fileContents = await ipcRenderer.invoke("readFile", a.path);
+        // convert plist to json
         const transformed = transformPlistToJson(fileContents);
+        // prepare props
         a.preview = {};
         a.url = "";
+        // if URL in webloc file
         if (transformed?.URL) {
+          // set the URL
           a.url = transformed.URL;
+          // fetch the preview
           const preview = await ipcRenderer.invoke(
             "getLinkPreview",
             transformed.URL
           );
           a.preview = preview;
+          // override some user set properties
+          if (transformed?.title) {
+            a.preview.title = transformed.title;
+          }
+          if (transformed?.description) {
+            a.preview.description = transformed.description;
+          }
         }
         return a;
       })
@@ -113,8 +134,12 @@ export default () => {
   };
 
   const onRightClickCard = (card: any) => {
+    // clear all other inputs
+    setShowEditTitleInput(false);
+    // set card
     setRightClickedCard(card);
-    console.log(card);
+    // show dropdown
+    setDropdownVisible(true);
   };
 
   const onOpenInBrowser = async () => {
@@ -133,12 +158,40 @@ export default () => {
     }
   };
 
+  const onEditTitle = async () => {};
+
+  const onDropdownVisibleChange = (newValue: boolean) => {
+    // if turning on, only do so if a right click card is selected
+    if (newValue) {
+      if (!rightClickedCard) {
+        return;
+      }
+    }
+    // if turning off, clear the input as well
+    if (!newValue) {
+      setShowEditTitleInput(false);
+      setRightClickedCard(null);
+    }
+    setDropdownVisible(newValue);
+  };
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={onOpenInBrowser}>
         Open in browser
       </Menu.Item>
-      <Menu.Item key="2" onClick={onTrash}>
+      <Menu.Item key="2" onClick={() => setShowEditTitleInput(true)}>
+        {showEditTitleInput ? (
+          <Search
+            placeholder={(rightClickedCard as any).preview?.title}
+            enterButton={<EditFilled />}
+            onSearch={onEditTitle}
+          />
+        ) : (
+          "Edit title"
+        )}
+      </Menu.Item>
+      <Menu.Item key="3" onClick={onTrash}>
         Move to Trash
       </Menu.Item>
     </Menu>
@@ -202,10 +255,20 @@ export default () => {
       {loading ? (
         <p>Loading folder contents...</p>
       ) : (
-        <div className="content-grid">
-          {content.map((c: any) => (
-            <Dropdown overlay={menu} trigger={["contextMenu"]} key={c.path}>
-              <div className="nuke" onContextMenu={() => onRightClickCard(c)}>
+        <Dropdown
+          overlay={menu}
+          trigger={["contextMenu"]}
+          visible={dropdownVisible}
+          onVisibleChange={onDropdownVisibleChange}
+        >
+          <div className="content-grid">
+            {/* cards in the grid */}
+            {content.map((c: any) => (
+              <div
+                className="nuke"
+                onContextMenu={() => onRightClickCard(c)}
+                key={c.path}
+              >
                 <Card
                   draggable
                   key={c.path}
@@ -216,12 +279,13 @@ export default () => {
                   url={c.preview?.url || c.url}
                 />
               </div>
-            </Dropdown>
-          ))}
-          {contextState.currentlySelectedFolderPath && content.length < 1 ? (
-            <p>Folder is empty</p>
-          ) : null}
-        </div>
+            ))}
+            {/* nothing in the grid */}
+            {contextState.currentlySelectedFolderPath && content.length < 1 ? (
+              <p>Folder is empty</p>
+            ) : null}
+          </div>
+        </Dropdown>
       )}
     </div>
   );

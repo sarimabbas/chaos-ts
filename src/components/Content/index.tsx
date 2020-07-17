@@ -84,7 +84,14 @@ export default () => {
     );
     setInputLink("");
     setShowAddModal(false);
-    getContent(contextState.currentlySelectedFolderPath);
+    const preview = await ipcRenderer.invoke("getLinkPreview", inputLink);
+    const tempContentEntity = {
+      path: Math.random(),
+      preview: preview,
+    };
+    console.log(preview);
+    setContent([tempContentEntity, ...content]);
+    // getContent(contextState.currentlySelectedFolderPath);
   };
 
   return (

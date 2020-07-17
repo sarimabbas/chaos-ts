@@ -69,11 +69,9 @@
     "antd": "^4.4.2",
     "directory-tree": "^2.2.4",
     "link-preview-js": "^2.0.4",
-    "rc-tree": "^3.6.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-helmet": "^6.1.0",
-    "styled-components": "^5.1.1"
+    "react-helmet": "^6.1.0"
   },
   "build": {
     "appId": "com.sarimabbas.chaos",

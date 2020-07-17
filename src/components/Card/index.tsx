@@ -7,6 +7,10 @@ const Card = ({ title, description, url, image, favicon }: any) => {
   const onCardMouseEnter = () => {
     const hoverHandle = setTimeout(() => {
       setShowIframe(true);
+      const webviewTag: any = document.querySelector("webview[data-type]");
+      webviewTag.addEventListener("dom-ready", () => {
+        webviewTag.setZoomFactor(0.5);
+      });
     }, 500);
     setCardHoverHandle(hoverHandle);
   };
@@ -25,7 +29,7 @@ const Card = ({ title, description, url, image, favicon }: any) => {
 
   return (
     <div
-      className="relative flex flex-col h-full pb-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200"
+      className="relative flex flex-col h-full pb-3 bg-gray-100 rounded-md cursor-pointer select-none hover:bg-gray-200"
       style={{
         border: "1px solid rgba(222,222,222,0.5)",
       }}
@@ -64,7 +68,9 @@ const Card = ({ title, description, url, image, favicon }: any) => {
             alt="favicon"
             className="object-cover w-5 h-5 mr-4"
           /> */}
-          <h1 className="text-lg">{title}</h1>
+          <h1 className="text-lg" draggable>
+            {title}
+          </h1>
         </div>
         {/* description */}
         <p className="mt-2">

@@ -109,6 +109,8 @@ const Sidebar = () => {
   const onDrop = async (info: any) => {
     console.log("on drop", info);
 
+    console.log(info.event.currentTarget);
+
     // * these are the user assigned keys for each node
     // * you gotta make sure these are unique for the drop to work
     const dropKey = info.node.key; // the thing being dropped on (target)
@@ -264,8 +266,7 @@ const Sidebar = () => {
   };
 
   const onRenameSubmit = async (value: string, event: any) => {
-    console.log(value);
-
+    // copy data
     const data = [...treeData];
 
     const loop = (
@@ -285,19 +286,28 @@ const Sidebar = () => {
       }
     };
 
+    // find the path to the folder
     let oldPath: any;
+    let findNode: any;
     loop(data, rightClickInfo.node.key, (curr, index, data, path: string) => {
       oldPath = path;
       curr.title = value;
+      findNode = curr;
     });
     oldPath = PATH.join(rootPath, oldPath);
 
-    console.log("oldPath", oldPath);
-
+    // create the new path
     const newPath = PATH.join(PATH.dirname(oldPath), value);
-    console.log("newPath", newPath);
 
+    // do the rename
     await ipcRenderer.invoke("renamePath", oldPath, newPath);
+
+    // refresh global context
+    setContextState({
+      ...contextState,
+      currentlySelectedExplorerNode: findNode,
+      currentlySelectedFolderPath: newPath,
+    });
 
     setTreeData(data);
     setRightClickInfo(null);
@@ -320,8 +330,31 @@ const Sidebar = () => {
     }
   };
 
+  const onAddFolder = async () => {
+    if (rightClickInfo) {
+      let selectedNodePath: any;
+      const data = [...treeData];
+      loopMe(data, rightClickInfo.node.key, (node, index, all, path) => {
+        selectedNodePath = path;
+        all.splice(index + 1, 0, {
+          key: Math.random(),
+          title: "New folder",
+        });
+      });
+      selectedNodePath = PATH.join(
+        PATH.dirname(PATH.join(rootPath, selectedNodePath)),
+        "New folder"
+      );
+      await ipcRenderer.invoke("makeFolder", selectedNodePath);
+      setTreeData(data);
+      setRightClickInfo(null);
+      setRightClickMenuVisible(false);
+    }
+  };
+
   const menu = (
     <Menu>
+      {/* rename */}
       {rightClickInfo ? (
         <Menu.Item key="1" onClick={() => setShowRenameInput(true)}>
           {showRenameInput ? (
@@ -335,8 +368,15 @@ const Sidebar = () => {
           )}
         </Menu.Item>
       ) : null}
+      {/* add folder */}
       {rightClickInfo ? (
-        <Menu.Item key="2" onClick={onMoveToTrash}>
+        <Menu.Item key="2" onClick={onAddFolder}>
+          Add folder
+        </Menu.Item>
+      ) : null}
+      {/* move to trash */}
+      {rightClickInfo ? (
+        <Menu.Item key="3" onClick={onMoveToTrash}>
           Move to Trash
         </Menu.Item>
       ) : null}
@@ -366,6 +406,10 @@ const Sidebar = () => {
         >
           <div>
             <Tree
+              // style={{
+              //   backgroundColor: "#4f5b62",
+              //   color: "#eceff1",
+              // }}
               onDragEnter={onDragEnter}
               height={500}
               onRightClick={onRightClick}

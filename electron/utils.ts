@@ -38,3 +38,7 @@ ipcMain.handle("openExternal", async (event, url) => {
 ipcMain.handle("moveToTrash", async (event, path) => {
   return shell.moveItemToTrash(path);
 });
+
+ipcMain.handle("makeFolder", async (event, path) => {
+  return FS.mkdir(path);
+});

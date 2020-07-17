@@ -200,6 +200,7 @@ export default () => {
             <Dropdown overlay={menu} trigger={["contextMenu"]} key={c.path}>
               <div className="nuke" onContextMenu={() => onRightClickCard(c)}>
                 <Card
+                  draggable
                   key={c.path}
                   title={c.preview?.title || c.title}
                   description={c.preview?.description}

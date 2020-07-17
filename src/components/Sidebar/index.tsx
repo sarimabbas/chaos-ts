@@ -9,6 +9,9 @@ import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 
 const Sidebar = () => {
+  // this is a function that traverses the tree starting at "data" node as root
+  // it does this until the key === data.key, at which point it applies a callback
+  // to that data node
   const loopMe = async (
     data: any,
     key: any,
@@ -125,39 +128,17 @@ const Sidebar = () => {
       info.dropPosition - Number(dropPos[dropPos.length - 1]);
     console.log("drop position", dropPosition);
 
-    // this is a function that traverses the tree starting at "data" node as root
-    // it does this until the key === data.key, at which point it applies a callback
-    // to that data node
-    const loop = async (
-      data: any,
-      key: any,
-      callback: any,
-      pathBuilder: string = ""
-    ) => {
-      for (let i = 0; i < data.length; i++) {
-        const pathSoFar = PATH.join(pathBuilder, data[i].title);
-        if (data[i].key === key) {
-          return callback(data[i], i, data, pathSoFar);
-        }
-        if (data[i].children) {
-          loop(data[i].children, key, callback, pathSoFar);
-        }
-      }
-    };
-
     // * Make a copy of all the data
     const data = [...treeData];
 
     const join = PATH.join("a", "b");
     console.log(join);
 
-    // TODO: compute path to dragNode before any of the splicing stuff happens below
-
     // * Remove the drag node from the children array of its parent
     // Find dragObject i.e. the thing being dragged
     let dragObj: any;
     let dragPath: any;
-    loop(data, dragKey, (item: any, index: any, arr: any, path: string) => {
+    loopMe(data, dragKey, (item: any, index: any, arr: any, path: string) => {
       // remove the drag node from the children[] of its parent
       arr.splice(index, 1);
       dragObj = item;
@@ -173,7 +154,7 @@ const Sidebar = () => {
       // find the node which is being dropped on
       // in the callback, get that node, and push to its children
       console.log("FIRST CASE");
-      loop(data, dropKey, (item: any) => {
+      loopMe(data, dropKey, (item: any) => {
         item.children = item.children || [];
         item.children.push(dragObj);
       });
@@ -185,7 +166,7 @@ const Sidebar = () => {
     ) {
       // * 2. hover over a node, it expands, and you put dragged node right after it
       console.log("SECOND CASE");
-      loop(data, dropKey, (item: any) => {
+      loopMe(data, dropKey, (item: any) => {
         item.children = item.children || [];
         item.children.unshift(dragObj); // insert at start of children
       });
@@ -199,7 +180,7 @@ const Sidebar = () => {
       // loop until you find the target node
       // find its index in its parent's children
       // also get the whole array of children
-      loop(data, dropKey, (item: any, index: any, arr: any) => {
+      loopMe(data, dropKey, (item: any, index: any, arr: any) => {
         ar = arr;
         i = index;
       });
@@ -212,16 +193,16 @@ const Sidebar = () => {
       }
     }
 
-    // TODO: compute path to dragNode after all the splicing stuff has happened
-    // TODO: mv oldPath newPath
-    // TODO: you can probably modify loop() with a pathBuilder argument, that is injected into the callback
-
     setTreeData(data);
 
     let newDragPath: any;
-    loop(data, dragKey, (item: any, index: number, arr: any, path: string) => {
-      newDragPath = path;
-    });
+    loopMe(
+      data,
+      dragKey,
+      (item: any, index: number, arr: any, path: string) => {
+        newDragPath = path;
+      }
+    );
     newDragPath = PATH.join(rootPath, newDragPath);
 
     console.log("new drag path", newDragPath);
@@ -230,11 +211,15 @@ const Sidebar = () => {
     await ipcRenderer.invoke("renamePath", dragPath, newDragPath);
   };
 
-  const onSelect = (selectedKeys, other) => {
+  const onSelect = (selectedKeys: any[], other: any) => {
     let selectedNodePath: any;
-    loopMe(treeData, other.node.key, (node, index, all, path) => {
-      selectedNodePath = path;
-    });
+    loopMe(
+      treeData,
+      other.node.key,
+      (node: any, index: number, all: any, path: string) => {
+        selectedNodePath = path;
+      }
+    );
     selectedNodePath = PATH.join(rootPath, selectedNodePath);
     console.log(selectedNodePath);
     setContextState({
@@ -269,31 +254,18 @@ const Sidebar = () => {
     // copy data
     const data = [...treeData];
 
-    const loop = (
-      data: any,
-      key: any,
-      callback: any,
-      pathBuilder: string = ""
-    ) => {
-      for (let i = 0; i < data.length; i++) {
-        const pathSoFar = PATH.join(pathBuilder, data[i].title);
-        if (data[i].key === key) {
-          return callback(data[i], i, data, pathSoFar);
-        }
-        if (data[i].children) {
-          loop(data[i].children, key, callback, pathSoFar);
-        }
-      }
-    };
-
     // find the path to the folder
     let oldPath: any;
     let findNode: any;
-    loop(data, rightClickInfo.node.key, (curr, index, data, path: string) => {
-      oldPath = path;
-      curr.title = value;
-      findNode = curr;
-    });
+    loopMe(
+      data,
+      rightClickInfo.node.key,
+      (curr: any, index: number, data: any, path: string) => {
+        oldPath = path;
+        curr.title = value;
+        findNode = curr;
+      }
+    );
     oldPath = PATH.join(rootPath, oldPath);
 
     // create the new path
@@ -318,10 +290,14 @@ const Sidebar = () => {
     if (rightClickInfo) {
       let selectedNodePath: any;
       const data = [...treeData];
-      loopMe(data, rightClickInfo.node.key, (node, index, all, path) => {
-        selectedNodePath = path;
-        all.splice(index, 1);
-      });
+      loopMe(
+        data,
+        rightClickInfo.node.key,
+        (node: any, index: number, all: any, path: string) => {
+          selectedNodePath = path;
+          all.splice(index, 1);
+        }
+      );
       selectedNodePath = PATH.join(rootPath, selectedNodePath);
       await ipcRenderer.invoke("moveToTrash", selectedNodePath);
       setTreeData(data);
@@ -334,13 +310,17 @@ const Sidebar = () => {
     if (rightClickInfo) {
       let selectedNodePath: any;
       const data = [...treeData];
-      loopMe(data, rightClickInfo.node.key, (node, index, all, path) => {
-        selectedNodePath = path;
-        all.splice(index + 1, 0, {
-          key: Math.random(),
-          title: "New folder",
-        });
-      });
+      loopMe(
+        data,
+        rightClickInfo.node.key,
+        (node: any, index: number, all: any, path: string) => {
+          selectedNodePath = path;
+          all.splice(index + 1, 0, {
+            key: Math.random(),
+            title: "New folder",
+          });
+        }
+      );
       selectedNodePath = PATH.join(
         PATH.dirname(PATH.join(rootPath, selectedNodePath)),
         "New folder"

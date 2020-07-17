@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ipcRenderer } from "electron";
-import { Modal, Menu, Dropdown, Affix } from "antd";
+import { Modal, Menu, Dropdown } from "antd";
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
-import { BorderOutlined } from "@ant-design/icons";
+import { transformPlistToJson, transformJsonToPlist } from "../../utils";
 
 export default () => {
   const [content, setContent]: any = useState([]);
@@ -57,16 +57,15 @@ export default () => {
     return Promise.all(
       arr.map(async (a) => {
         const fileContents = await ipcRenderer.invoke("readFile", a.path);
-        const oParser = new DOMParser();
-        const oDOM = oParser.parseFromString(fileContents, "application/xml");
-        let linkNodes = oDOM.querySelectorAll("string");
-        const links: any[] = [];
-        linkNodes.forEach((l) => links.push(l.textContent));
+        const transformed = transformPlistToJson(fileContents);
         a.preview = {};
         a.url = "";
-        if (links.length > 0) {
-          a.url = links[0];
-          const preview = await ipcRenderer.invoke("getLinkPreview", links[0]);
+        if (transformed?.URL) {
+          a.url = transformed.URL;
+          const preview = await ipcRenderer.invoke(
+            "getLinkPreview",
+            transformed.URL
+          );
           a.preview = preview;
         }
         return a;
@@ -75,32 +74,40 @@ export default () => {
   };
 
   const onAddLink = async (event: any) => {
+    // prevent propagation
     event.preventDefault();
-    console.log(inputLink);
-    const template = `
-    <dict>
-	    <key>URL</key>
-	    <string>${inputLink}</string>
-    </dict>
-    `;
+
+    // parse the url
     const url = new URL(inputLink);
-    console.log(url);
+
+    // create an obj payload
+    const payload = {
+      URL: inputLink,
+    };
+
+    // convert to plist string
+    const plist = transformJsonToPlist(payload);
+
+    // create file with the string as contents
     await ipcRenderer.invoke(
       "writeFile",
       PATH.join(
         contextState.currentlySelectedFolderPath,
         url.hostname + ".webloc"
       ),
-      template
+      plist
     );
+
+    // clear out inputs
     setInputLink("");
     setShowAddModal(false);
+
+    // create a temporary entity for instant feedback
     const preview = await ipcRenderer.invoke("getLinkPreview", inputLink);
     const tempContentEntity = {
       path: Math.random(),
       preview: preview,
     };
-    console.log(preview);
     setContent([tempContentEntity, ...content]);
     // getContent(contextState.currentlySelectedFolderPath);
   };

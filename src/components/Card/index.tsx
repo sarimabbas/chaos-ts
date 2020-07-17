@@ -7,7 +7,7 @@ const Card = ({ title, description, url, image, favicon }: any) => {
   const onCardMouseEnter = () => {
     const hoverHandle = setTimeout(() => {
       setShowIframe(true);
-    }, 1200);
+    }, 500);
     setCardHoverHandle(hoverHandle);
   };
 

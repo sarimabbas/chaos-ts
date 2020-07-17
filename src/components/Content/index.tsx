@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ipcRenderer } from "electron";
-import { Modal, Menu, Dropdown } from "antd";
+import { Modal, Menu, Dropdown, Affix } from "antd";
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
+import { BorderOutlined } from "@ant-design/icons";
 
 export default () => {
   const [content, setContent]: any = useState([]);
@@ -35,6 +36,7 @@ export default () => {
     const relevantContent: any[] = [];
     convertToContentArray(tree, relevantContent);
     const previews = await generatePreviews(relevantContent);
+    previews.sort((a, b) => b.mtime - a.mtime);
     console.log(previews);
     setContent(previews);
     setLoading(false);
@@ -136,9 +138,9 @@ export default () => {
   );
 
   return (
-    <div className="p-4">
+    <div className="px-4 pb-4">
       {/* header */}
-      <div className="flex justify-between">
+      <div className="sticky top-0 z-10 flex justify-between py-4 bg-white">
         {/* folder name */}
         <h1 className="flex">
           {contextState.currentlySelectedFolderPath

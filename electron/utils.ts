@@ -5,7 +5,7 @@ import dirTree from "directory-tree";
 import { getLinkPreview } from "link-preview-js";
 
 ipcMain.handle("getFileTree", async (event, startPath) => {
-  const tree = dirTree(startPath);
+  const tree = dirTree(startPath, { attributes: ["mtime", "mtimeMs"] });
   return tree;
 });
 

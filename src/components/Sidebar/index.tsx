@@ -300,10 +300,24 @@ const Sidebar = () => {
     await ipcRenderer.invoke("renamePath", oldPath, newPath);
 
     setTreeData(data);
-
     setRightClickInfo(null);
-    console.log("cleared");
     setRightClickMenuVisible(false);
+  };
+
+  const onMoveToTrash = async () => {
+    if (rightClickInfo) {
+      let selectedNodePath: any;
+      const data = [...treeData];
+      loopMe(data, rightClickInfo.node.key, (node, index, all, path) => {
+        selectedNodePath = path;
+        all.splice(index, 1);
+      });
+      selectedNodePath = PATH.join(rootPath, selectedNodePath);
+      await ipcRenderer.invoke("moveToTrash", selectedNodePath);
+      setTreeData(data);
+      setRightClickInfo(null);
+      setRightClickMenuVisible(false);
+    }
   };
 
   const menu = (
@@ -319,6 +333,11 @@ const Sidebar = () => {
           ) : (
             "Rename"
           )}
+        </Menu.Item>
+      ) : null}
+      {rightClickInfo ? (
+        <Menu.Item key="2" onClick={onMoveToTrash}>
+          Move to Trash
         </Menu.Item>
       ) : null}
     </Menu>

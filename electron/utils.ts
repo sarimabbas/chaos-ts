@@ -26,3 +26,7 @@ ipcMain.handle("getLinkPreview", async (event, url) => {
 ipcMain.handle("readFile", async (event, path) => {
   return FS.readFile(path, "utf-8");
 });
+
+ipcMain.handle("writeFile", async (event, path, contents) => {
+  return FS.writeFile(path, contents);
+});

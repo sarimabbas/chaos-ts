@@ -25,7 +25,10 @@ const Card = ({ title, description, url, image, favicon }: any) => {
 
   return (
     <div
-      className="relative flex flex-col h-full pb-3 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300"
+      className="relative flex flex-col h-full pb-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200"
+      style={{
+        border: "1px solid rgba(222,222,222,0.5)",
+      }}
       onMouseEnter={onCardMouseEnter}
       onMouseLeave={onCardMouseLeave}
       onDoubleClick={openPreview}

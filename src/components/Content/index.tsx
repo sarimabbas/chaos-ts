@@ -110,7 +110,7 @@ export default () => {
     if (rightClickedCard) {
       const pathToRemove = (rightClickedCard as any)?.path;
       // remove from content array
-      const newContent = content.filter((c) => c.path !== pathToRemove);
+      const newContent = content.filter((c: any) => c.path !== pathToRemove);
       await ipcRenderer.invoke("moveToTrash", pathToRemove);
       setContent(newContent);
     }

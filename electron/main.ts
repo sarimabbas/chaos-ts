@@ -16,6 +16,7 @@ function createWindow() {
     backgroundColor: "#ffffff",
     webPreferences: {
       nodeIntegration: true,
+      webviewTag: true,
     },
   });
 

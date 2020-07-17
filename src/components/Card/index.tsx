@@ -1,12 +1,43 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 const Card = ({ title, description, url, image, favicon }: any) => {
+  const [cardHoverHandle, setCardHoverHandle]: any = useState(null);
+  const [showIframe, setShowIframe]: any = useState(false);
+
+  const onCardMouseEnter = () => {
+    const hoverHandle = setTimeout(() => {
+      setShowIframe(true);
+    }, 1200);
+    setCardHoverHandle(hoverHandle);
+  };
+
+  const onCardMouseLeave = () => {
+    if (cardHoverHandle) {
+      clearTimeout(cardHoverHandle);
+    }
+    setCardHoverHandle(null);
+    setShowIframe(false);
+  };
+
+  const openPreview = () => {
+    window.open(url, "_blank");
+  };
+
   return (
-    <div className="relative flex flex-col h-full pb-3 bg-gray-200 rounded-md hover:bg-gray-300">
-      {/* link */}
-      <a href={url} className="card-link" target="__blank" />
+    <div
+      className="relative flex flex-col h-full pb-3 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300"
+      onMouseEnter={onCardMouseEnter}
+      onMouseLeave={onCardMouseLeave}
+      onDoubleClick={openPreview}
+    >
       {/* image */}
-      {image ? (
+      {showIframe ? (
+        <webview
+          data-type="preview"
+          src={url}
+          className="object-cover w-full h-40 mb-4 border-gray-500 border-opacity-25 border-solid rounded-t-md"
+        />
+      ) : (
         <img
           src={
             image ||
@@ -20,8 +51,6 @@ const Card = ({ title, description, url, image, favicon }: any) => {
           }}
           loading="lazy"
         />
-      ) : (
-        <div className="object-cover h-40 mb-4" />
       )}
       {/* information */}
       <div className="px-4">

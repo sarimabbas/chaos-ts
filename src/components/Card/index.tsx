@@ -2,7 +2,8 @@ import React from "react";
 
 export default ({ title, description, url, image, favicon }: any) => {
   return (
-    <div className="flex flex-col px-4 py-4 bg-gray-300 rounded-md">
+    <div className="relative flex flex-col px-4 py-4 bg-gray-300 rounded-md hover:bg-gray-400">
+      <a href={url} className="card-link" target="__blank" />
       {image ? (
         <img
           src={image || favicon}

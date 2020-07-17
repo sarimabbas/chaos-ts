@@ -48,7 +48,9 @@ export default () => {
         const links: any[] = [];
         linkNodes.forEach((l) => links.push(l.textContent));
         a.preview = {};
+        a.url = "";
         if (links.length > 0) {
+          a.url = links[0];
           const preview = await ipcRenderer.invoke("getLinkPreview", links[0]);
           a.preview = preview;
         }
@@ -79,6 +81,7 @@ export default () => {
               description={c.preview?.description}
               image={c.preview?.images?.[0]}
               favicon={c.preview?.favicons?.[0]}
+              url={c.preview?.url || c.url}
             />
           ))}
           {contextState.currentlySelectedFolderPath && content.length < 1 ? (

@@ -21,6 +21,14 @@ export default () => {
     }
   }, [contextState.currentlySelectedFolderPath]);
 
+  useEffect(() => {
+    ipcRenderer.on("add-link", () => {
+      setShowAddModal(true);
+      const addInput: any = document.querySelector("#add-input");
+      addInput.focus();
+    });
+  }, []);
+
   const getContent = async (path: string) => {
     setLoading(true);
     let tree = await ipcRenderer.invoke("getFileTree", path);
@@ -147,7 +155,7 @@ export default () => {
               onClick={() => setShowAddModal(true)}
               className="px-2 py-1 bg-gray-300 rounded-md cursor-pointer hover:bg-gray-400"
             >
-              Add link
+              Add link (⌘+N)
             </div>
             <Modal
               centered
@@ -163,6 +171,7 @@ export default () => {
               >
                 <input
                   value={inputLink}
+                  id="add-input"
                   onChange={(e) => setInputLink(e.currentTarget.value)}
                   type="url"
                   placeholder="https://example.com"

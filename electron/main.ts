@@ -1,5 +1,6 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import "./utils";
+import "./menu";
 
 import * as path from "path";
 import * as url from "url";
@@ -7,7 +8,7 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
 
-let mainWindow: Electron.BrowserWindow | null;
+export let mainWindow: Electron.BrowserWindow | null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({

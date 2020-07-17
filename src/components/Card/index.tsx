@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 
 const Card = ({ title, description, url, image, favicon }: any) => {
   const [cardHoverHandle, setCardHoverHandle]: any = useState(null);

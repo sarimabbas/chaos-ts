@@ -140,13 +140,13 @@ export default () => {
   return (
     <div className="px-4 pb-4">
       {/* header */}
-      <div className="sticky top-0 z-10 flex justify-between py-4 bg-white">
+      <div className="sticky top-0 z-10 flex justify-between py-4 bg-white select-none">
         {/* folder name */}
         <h1 className="flex">
           {contextState.currentlySelectedFolderPath
             ? "Folder:"
             : "No folder selected"}
-          <pre className="ml-2">
+          <pre className="ml-2 select-all">
             {(contextState.currentlySelectedExplorerNode as any).title}
           </pre>
         </h1>

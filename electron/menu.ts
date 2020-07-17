@@ -73,7 +73,6 @@ const template = [
     submenu: [
       { role: "reload" },
       { role: "forcereload" },
-      { role: "toggledevtools" },
       { type: "separator" },
       { role: "resetzoom" },
       { role: "zoomin" },
@@ -102,7 +101,7 @@ const template = [
     role: "help",
     submenu: [
       {
-        label: "Learn More",
+        label: "Get support",
         click: async () => {
           await shell.openExternal("https://sarimabbas.com");
         },

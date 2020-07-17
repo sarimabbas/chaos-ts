@@ -37,7 +37,11 @@ const Sidebar = () => {
     GeneralContext
   );
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    ipcRenderer.on("open-folder", () => {
+      chooseRootFolder();
+    });
+  }, []);
 
   const convertToExplorerTree = (root: any) => {
     delete root.path;
@@ -321,30 +325,49 @@ const Sidebar = () => {
   );
 
   return (
-    <div className="p-4">
-      <a href="#" onClick={chooseRootFolder}>
-        Choose folder
-      </a>
-      <div className="h-4"></div>
-      <Dropdown
-        overlay={menu}
-        visible={rightClickMenuVisible}
-        trigger={["contextMenu"]}
-        onVisibleChange={handleVisibleChange}
-      >
-        <div>
-          <Tree
-            onDragEnter={onDragEnter}
-            height={500}
-            onRightClick={onRightClick}
-            treeData={treeData}
-            onDrop={onDrop}
-            onSelect={onSelect}
-            autoExpandParent={false}
-            draggable
+    <div className="flex flex-col justify-between h-full p-4">
+      <div className="top">
+        {/* logo */}
+        <div className="flex flex-col items-center justify-center">
+          <img
+            src="https://sarimabbas.github.io/chaos/assets/icon.png"
+            alt="logo"
+            className="w-6"
           />
+          <h1 className="text-2xl text-white">Chaos</h1>
         </div>
-      </Dropdown>
+        {/* spacer */}
+        <div className="h-4"></div>
+        {/* tree */}
+        <Dropdown
+          overlay={menu}
+          visible={rightClickMenuVisible}
+          trigger={["contextMenu"]}
+          onVisibleChange={handleVisibleChange}
+        >
+          <div>
+            <Tree
+              onDragEnter={onDragEnter}
+              height={500}
+              onRightClick={onRightClick}
+              treeData={treeData}
+              onDrop={onDrop}
+              onSelect={onSelect}
+              autoExpandParent={false}
+              draggable
+            />
+          </div>
+        </Dropdown>
+      </div>
+      {/* choose folder button */}
+      <div className="flex justify-center">
+        <div
+          onClick={chooseRootFolder}
+          className="inline-block px-2 py-1 mx-auto bg-gray-300 rounded-md cursor-pointer hover:bg-gray-400"
+        >
+          Choose folder (⌘+O)
+        </div>
+      </div>
     </div>
   );
 };

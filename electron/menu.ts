@@ -26,7 +26,13 @@ const template = [
   {
     label: "File",
     submenu: [
-      isMac ? { role: "close" } : { role: "quit" },
+      {
+        label: "Open folder",
+        accelerator: "CmdOrCtrl+O",
+        click: () => {
+          mainWindow?.webContents.send("open-folder");
+        },
+      },
       {
         label: "Add link",
         accelerator: "CmdOrCtrl+N",
@@ -34,6 +40,7 @@ const template = [
           mainWindow?.webContents.send("add-link");
         },
       },
+      isMac ? { role: "close" } : { role: "quit" },
     ],
   },
   // { role: 'editMenu' }

@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { ipcRenderer, contextBridge } from "electron";
+import { ipcRenderer } from "electron";
 import { Modal, Menu, Dropdown, Input } from "antd";
 const { TextArea } = Input;
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
-import { transformPlistToJson, transformJsonToPlist } from "../../utils";
+import {
+  transformPlistToJson,
+  transformJsonToPlist,
+  convertTreeToSupportedFilesArray,
+  readSupportedFile,
+} from "../../utils";
 
 export default () => {
   const [content, setContent]: any = useState([]);
@@ -26,18 +31,21 @@ export default () => {
 
   const addInputRef = useRef(null);
 
-  useEffect(() => {
-    if (showAddModal) {
-      (addInputRef as any)?.current?.focus();
-    }
-  }, [showAddModal]);
-
+  // whenever the current folder path changes, fetch the content anew
   useEffect(() => {
     if (contextState.currentlySelectedFolderPath !== "") {
       getContent(contextState.currentlySelectedFolderPath);
     }
   }, [contextState.currentlySelectedFolderPath]);
 
+  // whenever the add link modal is shown, put the input in focus
+  useEffect(() => {
+    if (showAddModal) {
+      (addInputRef as any)?.current?.focus();
+    }
+  }, [showAddModal]);
+
+  // whenever the add link shortcut is pressed, put the input in focus
   useEffect(() => {
     ipcRenderer.on("add-link", () => {
       setShowAddModal(true);
@@ -49,6 +57,7 @@ export default () => {
     };
   }, []);
 
+  // whenever the undo shortcut is pressed, call the undo function
   useEffect(() => {
     ipcRenderer.on("undo", () => {
       onUndo();
@@ -62,6 +71,15 @@ export default () => {
   const getContent = async (path: string) => {
     setLoading(true);
     let tree = await ipcRenderer.invoke("getFileTree", path);
+    console.log(tree);
+
+    const test = convertTreeToSupportedFilesArray(tree);
+    console.log("supportedFiles", test);
+    const readFiles = await Promise.all(
+      test.map((f) => readSupportedFile(f))
+    );
+    console.log("readFiles", readFiles);
+
     const relevantContent: any[] = [];
     convertToContentArray(tree, relevantContent);
     const previews = await generatePreviews(relevantContent);

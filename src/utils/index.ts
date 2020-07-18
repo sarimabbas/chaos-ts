@@ -24,3 +24,5 @@ export const transformJsonToPlist = (obj: any) => {
   `;
   return finalTemplate;
 };
+
+export * from "./files";

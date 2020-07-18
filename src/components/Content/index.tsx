@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { ipcRenderer } from "electron";
 import { Modal, Menu, Dropdown, Input } from "antd";
 import { EditFilled } from "@ant-design/icons";
-const { Search } = Input;
+const { Search, TextArea } = Input;
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
@@ -21,6 +21,9 @@ export default () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [rightClickedCard, setRightClickedCard] = useState(null);
   const [showEditTitleInput, setShowEditTitleInput] = useState(false);
+  const [showEditDescriptionInput, setShowEditDescriptionInput] = useState(
+    false
+  );
 
   useEffect(() => {
     if (contextState.currentlySelectedFolderPath !== "") {
@@ -158,21 +161,53 @@ export default () => {
     }
   };
 
-  const onEditTitle = async () => {};
+  const onEditTitle = async (event: any) => {
+    const value = event.currentTarget.value;
+    const filePath: string = (rightClickedCard as any).path;
+    const fileContents = await ipcRenderer.invoke("readFile", filePath);
+    const fileObj = transformPlistToJson(fileContents);
+    const updatedFileObj = {
+      ...fileObj,
+      title: value,
+    };
+    const updatedFileContents = transformJsonToPlist(updatedFileObj);
+    await ipcRenderer.invoke("writeFile", filePath, updatedFileContents);
+    (rightClickedCard as any).preview.title = value;
+    setShowEditTitleInput(false);
+    setDropdownVisible(false);
+    setRightClickedCard(null);
+  };
+
+  const onEditDescription = async (event: any) => {
+    const value = event.currentTarget.value;
+    const filePath: string = (rightClickedCard as any).path;
+    const fileContents = await ipcRenderer.invoke("readFile", filePath);
+    const fileObj = transformPlistToJson(fileContents);
+    const updatedFileObj = {
+      ...fileObj,
+      description: value,
+    };
+    const updatedFileContents = transformJsonToPlist(updatedFileObj);
+    await ipcRenderer.invoke("writeFile", filePath, updatedFileContents);
+    (rightClickedCard as any).preview.description = value;
+    setShowEditDescriptionInput(false);
+    setDropdownVisible(false);
+    setRightClickedCard(null);
+  };
 
   const onDropdownVisibleChange = (newValue: boolean) => {
-    // if turning on, only do so if a right click card is selected
     if (newValue) {
-      if (!rightClickedCard) {
-        return;
+      // if turning on, only do so if a right click card is selected
+      if (rightClickedCard) {
+        setDropdownVisible(newValue);
       }
-    }
-    // if turning off, clear the input as well
-    if (!newValue) {
+    } else {
+      // if turning off, clear the input as well
+      setDropdownVisible(newValue);
       setShowEditTitleInput(false);
+      setShowEditDescriptionInput(false);
       setRightClickedCard(null);
     }
-    setDropdownVisible(newValue);
   };
 
   const menu = (
@@ -182,16 +217,27 @@ export default () => {
       </Menu.Item>
       <Menu.Item key="2" onClick={() => setShowEditTitleInput(true)}>
         {showEditTitleInput ? (
-          <Search
-            placeholder={(rightClickedCard as any).preview?.title}
-            enterButton={<EditFilled />}
-            onSearch={onEditTitle}
+          <Input
+            defaultValue={(rightClickedCard as any).preview?.title}
+            onPressEnter={onEditTitle}
           />
         ) : (
           "Edit title"
         )}
       </Menu.Item>
-      <Menu.Item key="3" onClick={onTrash}>
+      <Menu.Item key="3" onClick={() => setShowEditDescriptionInput(true)}>
+        {showEditDescriptionInput ? (
+          <TextArea
+            rows={4}
+            allowClear
+            defaultValue={(rightClickedCard as any).preview?.description}
+            onPressEnter={onEditDescription}
+          />
+        ) : (
+          "Edit description"
+        )}
+      </Menu.Item>
+      <Menu.Item key="4" onClick={onTrash}>
         Move to Trash
       </Menu.Item>
     </Menu>

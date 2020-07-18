@@ -242,36 +242,35 @@ export default () => {
     }
   };
 
-  const onEditTitle = async (event: any) => {
+  const onEditField = async (event: any, targetField: string) => {
+    // get value from input
     const value = event.currentTarget.value;
+    // get path to file to change
     const filePath: string = (rightClickedCard as any).path;
+    // get contents of file
     const fileContents = await ipcRenderer.invoke("readFile", filePath);
+    // convert to object
     const fileObj = transformPlistToJson(fileContents);
+    // make an updated object
     const updatedFileObj = {
       ...fileObj,
-      title: value,
+      [targetField]: value,
     };
+    // write out object and overwrite file
     const updatedFileContents = writeWebloc(updatedFileObj);
     await ipcRenderer.invoke("writeFile", filePath, updatedFileContents);
-    (rightClickedCard as any).preview.title = value;
-    setShowEditTitleInput(false);
-    setDropdownVisible(false);
-    setRightClickedCard(null);
-  };
-
-  const onEditDescription = async (event: any) => {
-    const value = event.currentTarget.value;
-    const filePath: string = (rightClickedCard as any).path;
-    const fileContents = await ipcRenderer.invoke("readFile", filePath);
-    const fileObj = transformPlistToJson(fileContents);
-    const updatedFileObj = {
-      ...fileObj,
-      description: value,
-    };
-    const updatedFileContents = writeWebloc(updatedFileObj);
-    await ipcRenderer.invoke("writeFile", filePath, updatedFileContents);
-    (rightClickedCard as any).preview.description = value;
-    setShowEditDescriptionInput(false);
+    // set temp preview
+    switch (targetField) {
+      case "title":
+        (rightClickedCard as any).preview.title = value;
+        setShowEditTitleInput(false);
+        break;
+      case "description":
+        (rightClickedCard as any).preview.description = value;
+        setShowEditDescriptionInput(false);
+        break;
+    }
+    // clear menus
     setDropdownVisible(false);
     setRightClickedCard(null);
   };
@@ -308,7 +307,7 @@ export default () => {
         {showEditTitleInput ? (
           <Input
             defaultValue={(rightClickedCard as any).preview?.title}
-            onPressEnter={onEditTitle}
+            onPressEnter={(e) => onEditField(e, "title")}
           />
         ) : (
           "Edit title"
@@ -320,7 +319,7 @@ export default () => {
             rows={4}
             allowClear
             defaultValue={(rightClickedCard as any).preview?.description}
-            onPressEnter={onEditDescription}
+            onPressEnter={(e) => onEditField(e, "description")}
           />
         ) : (
           "Edit description"

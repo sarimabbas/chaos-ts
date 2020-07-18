@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { ipcRenderer } from "electron";
 import { Modal, Menu, Dropdown, Input } from "antd";
 import { EditFilled } from "@ant-design/icons";
@@ -24,6 +24,14 @@ export default () => {
   const [showEditDescriptionInput, setShowEditDescriptionInput] = useState(
     false
   );
+
+  const addInputRef = useRef(null);
+
+  useEffect(() => {
+    if (showAddModal) {
+      (addInputRef as any)?.current?.focus();
+    }
+  }, [showAddModal]);
 
   useEffect(() => {
     if (contextState.currentlySelectedFolderPath !== "") {
@@ -319,6 +327,8 @@ export default () => {
               >
                 <input
                   value={inputLink}
+                  ref={addInputRef}
+                  autoFocus
                   id="add-input"
                   onChange={(e) => setInputLink(e.currentTarget.value)}
                   type="url"

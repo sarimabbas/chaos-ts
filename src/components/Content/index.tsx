@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { ipcRenderer } from "electron";
+import { ipcRenderer, contextBridge } from "electron";
 import { Modal, Menu, Dropdown, Input } from "antd";
-import { EditFilled } from "@ant-design/icons";
-const { Search, TextArea } = Input;
+const { TextArea } = Input;
 import PATH from "path";
 import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
@@ -45,7 +44,20 @@ export default () => {
       const addInput: any = document.querySelector("#add-input");
       addInput.focus();
     });
+    return () => {
+      ipcRenderer.removeAllListeners("add-link");
+    };
   }, []);
+
+  useEffect(() => {
+    ipcRenderer.on("undo", () => {
+      onUndo();
+    });
+    return () => {
+      ipcRenderer.removeAllListeners("undo");
+    };
+    // these deps are needed because the event listener doesn't have access to the state
+  }, [contextState, content]);
 
   const getContent = async (path: string) => {
     setLoading(true);
@@ -54,7 +66,6 @@ export default () => {
     convertToContentArray(tree, relevantContent);
     const previews = await generatePreviews(relevantContent);
     previews.sort((a, b) => b.mtime - a.mtime);
-    console.log(previews);
     setContent(previews);
     setLoading(false);
   };
@@ -126,14 +137,11 @@ export default () => {
     const plist = transformJsonToPlist(payload);
 
     // create file with the string as contents
-    await ipcRenderer.invoke(
-      "writeFile",
-      PATH.join(
-        contextState.currentlySelectedFolderPath,
-        url.hostname + ".webloc"
-      ),
-      plist
+    const writePath = PATH.join(
+      contextState.currentlySelectedFolderPath,
+      url.hostname + ".webloc"
     );
+    await ipcRenderer.invoke("writeFile", writePath, plist);
 
     // clear out inputs
     setInputLink("");
@@ -142,11 +150,33 @@ export default () => {
     // create a temporary entity for instant feedback
     const preview = await ipcRenderer.invoke("getLinkPreview", inputLink);
     const tempContentEntity = {
-      path: Math.random(),
+      path: writePath,
       preview: preview,
     };
     setContent([tempContentEntity, ...content]);
     // getContent(contextState.currentlySelectedFolderPath);
+  };
+
+  const onUndo = async () => {
+    const undoStack = [...contextState.contentUndoStack];
+    if (undoStack.length > 0) {
+      const lastItem: any = undoStack.pop();
+      // first, restore the file
+      await ipcRenderer.invoke(
+        "writeFile",
+        lastItem?.path,
+        lastItem?.fileContents
+      );
+      // next, restore the node in the contents array
+      const newContent = [...content];
+      newContent.splice(lastItem?.index, 0, lastItem);
+      setContent(newContent);
+      // update the undo stack
+      setContextState({
+        ...contextState,
+        contentUndoStack: undoStack,
+      });
+    }
   };
 
   const onRightClickCard = (card: any) => {
@@ -166,11 +196,32 @@ export default () => {
 
   const onTrash = async () => {
     if (rightClickedCard) {
+      // * get path to remove
       const pathToRemove = (rightClickedCard as any)?.path;
-      // remove from content array
-      const newContent = content.filter((c: any) => c.path !== pathToRemove);
-      await ipcRenderer.invoke("moveToTrash", pathToRemove);
+      // * add to undo stack
+      let removedIndex: any;
+      content.forEach((c: any, i: number) => {
+        if (c.path === pathToRemove) {
+          removedIndex = i;
+        }
+      });
+      const savedItem: any = {
+        ...(rightClickedCard as any),
+        index: removedIndex,
+        fileContents: await ipcRenderer.invoke("readFile", pathToRemove),
+      };
+      setContextState({
+        ...contextState,
+        contentUndoStack: [...contextState.contentUndoStack, savedItem],
+      });
+      // * set content and delete file
+      const newContent = content.filter(
+        (c: any, index: number) => c.path !== pathToRemove
+      );
       setContent(newContent);
+      await ipcRenderer.invoke("moveToTrash", pathToRemove);
+      // * hide dropdown
+      setDropdownVisible(false);
     }
   };
 

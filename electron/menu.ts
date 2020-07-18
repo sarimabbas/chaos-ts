@@ -47,7 +47,13 @@ const template = [
   {
     label: "Edit",
     submenu: [
-      { role: "undo" },
+      {
+        label: "Undo",
+        accelerator: "CmdOrCtrl+Z",
+        click: () => {
+          mainWindow?.webContents.send("undo");
+        },
+      },
       { role: "redo" },
       { type: "separator" },
       { role: "cut" },

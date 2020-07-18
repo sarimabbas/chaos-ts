@@ -87,10 +87,15 @@ export default () => {
           // set the URL
           a.url = transformed.URL;
           // fetch the preview
-          const preview = await ipcRenderer.invoke(
-            "getLinkPreview",
-            transformed.URL
-          );
+          let preview: any = {};
+          try {
+            preview = await ipcRenderer.invoke(
+              "getLinkPreview",
+              transformed.URL
+            );
+          } catch (e) {
+            console.log(e);
+          }
           a.preview = preview;
           // override some user set properties
           if (transformed?.title) {

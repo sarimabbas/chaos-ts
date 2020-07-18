@@ -60,15 +60,12 @@ const readWebloc = async (node: any): Promise<object> => {
   // get link preview
   let linkPreview: any = {};
   try {
-    linkPreview = await ipcRenderer.invoke(
-      "getLinkPreview",
-      result?.URL || result?.url
-    );
+    linkPreview = await ipcRenderer.invoke("getLinkPreview", result?.URL);
   } catch (e) {
     console.log(e);
   }
   // cleanup so that it follows casing convention
-  result.url = result?.URL || result?.url;
+  result.url = result?.URL;
   delete result.URL;
   // return
   return {
@@ -79,7 +76,7 @@ const readWebloc = async (node: any): Promise<object> => {
   };
 };
 
-const writeWebloc = (obj: object): string => {
+export const writeWebloc = (obj: object): string => {
   let keyValueTemplate = ``;
   // iterate all key values
   for (const key in obj) {

@@ -7,9 +7,9 @@ import { GeneralContext } from "../../contexts/GeneralContext";
 import Card from "../Card";
 import {
   transformPlistToJson,
-  transformJsonToPlist,
   convertTreeToSupportedFilesArray,
   readSupportedFile,
+  writeWebloc,
 } from "../../utils";
 
 export default () => {
@@ -75,9 +75,7 @@ export default () => {
 
     const test = convertTreeToSupportedFilesArray(tree);
     console.log("supportedFiles", test);
-    const readFiles = await Promise.all(
-      test.map((f) => readSupportedFile(f))
-    );
+    const readFiles = await Promise.all(test.map((f) => readSupportedFile(f)));
     console.log("readFiles", readFiles);
 
     const relevantContent: any[] = [];
@@ -152,13 +150,14 @@ export default () => {
     };
 
     // convert to plist string
-    const plist = transformJsonToPlist(payload);
-
+    const plist = writeWebloc(payload);
     // create file with the string as contents
     const writePath = PATH.join(
       contextState.currentlySelectedFolderPath,
       url.hostname + ".webloc"
     );
+
+    // write file
     await ipcRenderer.invoke("writeFile", writePath, plist);
 
     // clear out inputs
@@ -252,7 +251,7 @@ export default () => {
       ...fileObj,
       title: value,
     };
-    const updatedFileContents = transformJsonToPlist(updatedFileObj);
+    const updatedFileContents = writeWebloc(updatedFileObj);
     await ipcRenderer.invoke("writeFile", filePath, updatedFileContents);
     (rightClickedCard as any).preview.title = value;
     setShowEditTitleInput(false);
@@ -269,7 +268,7 @@ export default () => {
       ...fileObj,
       description: value,
     };
-    const updatedFileContents = transformJsonToPlist(updatedFileObj);
+    const updatedFileContents = writeWebloc(updatedFileObj);
     await ipcRenderer.invoke("writeFile", filePath, updatedFileContents);
     (rightClickedCard as any).preview.description = value;
     setShowEditDescriptionInput(false);

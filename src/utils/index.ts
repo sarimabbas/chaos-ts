@@ -11,18 +11,4 @@ export const transformPlistToJson = (content: string) => {
   return result;
 };
 
-export const transformJsonToPlist = (obj: any) => {
-  let keyValueTemplate = ``;
-  for (const key in obj) {
-    const value = obj[key];
-    keyValueTemplate += `<key>${key}</key><string>${value}</string>`;
-  }
-  const finalTemplate = `
-  <dict>
-    ${keyValueTemplate}
-  </dict>
-  `;
-  return finalTemplate;
-};
-
 export * from "./files";

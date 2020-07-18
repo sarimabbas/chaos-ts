@@ -210,6 +210,14 @@ export default () => {
     }
   };
 
+  const onBreadcrumbClick = (relativePath: string, fullPath: string) => {
+    setContextState({
+      ...contextState,
+      currentlySelectedFolderPath: fullPath,
+      currentlySelectedRelativeFolderPath: relativePath,
+    });
+  };
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={onOpenInBrowser}>
@@ -247,23 +255,41 @@ export default () => {
     <div className="px-4 pb-4">
       {/* header */}
       <div className="sticky top-0 z-10 flex items-center justify-between py-4 bg-white select-none">
-        {/* folder name */}
+        {/* breadcrumbs */}
         <h1 className="flex">
-          <div className="flex select-all">
+          {/* breadcrumbs */}
+          <div className="flex">
             {contextState.currentlySelectedRelativeFolderPath
               .split("/")
               .filter((segment) => segment !== "")
               .map((segment, index, array) => {
+                let fullPath = contextState.currentlySelectedFolderPath;
+                let relativePath =
+                  contextState.currentlySelectedRelativeFolderPath;
+                const numberOfTimesToPop = array.length - index - 1;
+                for (let i = 0; i < numberOfTimesToPop; i++) {
+                  fullPath = PATH.dirname(fullPath);
+                  relativePath = PATH.dirname(relativePath);
+                }
                 return (
                   <div key={index}>
                     <div className="flex mr-3">
-                      <a className="mr-3">{segment}</a>
+                      <a
+                        className="mr-3"
+                        href="#"
+                        onClick={() =>
+                          onBreadcrumbClick(relativePath, fullPath)
+                        }
+                      >
+                        {segment}
+                      </a>
                       {index !== array.length - 1 ? "/" : ""}
                     </div>
                   </div>
                 );
               })}
           </div>
+          {/* empty breadcrumbs */}
           <p>
             {contextState.currentlySelectedFolderPath
               ? ""

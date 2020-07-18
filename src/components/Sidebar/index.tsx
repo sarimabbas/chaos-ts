@@ -225,7 +225,6 @@ const Sidebar = () => {
       ...contextState,
       currentlySelectedFolderPath: fullPath,
       currentlySelectedRelativeFolderPath: relativePath,
-      currentlySelectedExplorerNode: other.node,
     });
   };
 
@@ -276,7 +275,6 @@ const Sidebar = () => {
     // refresh global context
     setContextState({
       ...contextState,
-      currentlySelectedExplorerNode: findNode,
       currentlySelectedFolderPath: newPath,
       currentlySelectedRelativeFolderPath: newRelativePath,
     });

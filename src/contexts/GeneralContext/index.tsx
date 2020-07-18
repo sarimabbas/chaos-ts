@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 export const GeneralContext = React.createContext({
   state: {
+    currentlySelectedRelativeFolderPath: "",
     currentlySelectedFolderPath: "",
     currentlySelectedExplorerNode: {},
   },
@@ -10,6 +11,7 @@ export const GeneralContext = React.createContext({
 
 export const GeneralContextProvider = (props: any) => {
   const [state, setState] = useState({
+    currentlySelectedRelativeFolderPath: "",
     currentlySelectedFolderPath: "",
     currentlySelectedExplorerNode: {},
   });

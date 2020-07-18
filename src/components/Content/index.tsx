@@ -246,15 +246,29 @@ export default () => {
   return (
     <div className="px-4 pb-4">
       {/* header */}
-      <div className="sticky top-0 z-10 flex justify-between py-4 bg-white select-none">
+      <div className="sticky top-0 z-10 flex items-center justify-between py-4 bg-white select-none">
         {/* folder name */}
         <h1 className="flex">
-          {contextState.currentlySelectedFolderPath
-            ? "Folder:"
-            : "No folder selected"}
-          <pre className="ml-2 select-all">
-            {(contextState.currentlySelectedExplorerNode as any).title}
-          </pre>
+          <div className="flex select-all">
+            {contextState.currentlySelectedRelativeFolderPath
+              .split("/")
+              .filter((segment) => segment !== "")
+              .map((segment, index, array) => {
+                return (
+                  <div key={index}>
+                    <div className="flex mr-3">
+                      <a className="mr-3">{segment}</a>
+                      {index !== array.length - 1 ? "/" : ""}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+          <p>
+            {contextState.currentlySelectedFolderPath
+              ? ""
+              : "No folder selected"}
+          </p>
         </h1>
         {/* add button */}
         {contextState.currentlySelectedFolderPath ? (

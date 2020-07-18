@@ -212,19 +212,19 @@ const Sidebar = () => {
   };
 
   const onSelect = (selectedKeys: any[], other: any) => {
-    let selectedNodePath: any;
+    let relativePath: any;
     loopMe(
       treeData,
       other.node.key,
       (node: any, index: number, all: any, path: string) => {
-        selectedNodePath = path;
+        relativePath = path;
       }
     );
-    selectedNodePath = PATH.join(rootPath, selectedNodePath);
-    console.log(selectedNodePath);
+    let fullPath = PATH.join(rootPath, relativePath);
     setContextState({
       ...contextState,
-      currentlySelectedFolderPath: selectedNodePath,
+      currentlySelectedFolderPath: fullPath,
+      currentlySelectedRelativeFolderPath: relativePath,
       currentlySelectedExplorerNode: other.node,
     });
   };
@@ -253,20 +253,21 @@ const Sidebar = () => {
     const data = [...treeData];
 
     // find the path to the folder
-    let oldPath: any;
+    let oldRelativePath: any;
     let findNode: any;
     loopMe(
       data,
       rightClickInfo.node.key,
       (curr: any, index: number, data: any, path: string) => {
-        oldPath = path;
+        oldRelativePath = path;
         curr.title = value;
         findNode = curr;
       }
     );
-    oldPath = PATH.join(rootPath, oldPath);
+    let oldPath = PATH.join(rootPath, oldRelativePath);
 
     // create the new path
+    const newRelativePath = PATH.join(PATH.dirname(oldRelativePath), value);
     const newPath = PATH.join(PATH.dirname(oldPath), value);
 
     // do the rename
@@ -277,6 +278,7 @@ const Sidebar = () => {
       ...contextState,
       currentlySelectedExplorerNode: findNode,
       currentlySelectedFolderPath: newPath,
+      currentlySelectedRelativeFolderPath: newRelativePath,
     });
 
     setTreeData(data);
